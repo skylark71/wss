@@ -16,7 +16,6 @@ WORKDIR /build
 COPY . .
 
 WORKDIR /build/
-RUN git config --global url."https://naima:yhSme1_sxskDUsXPpDyu@gitlab.com/".insteadOf "https://gitlab.com/"
 
 RUN go env -w GOPRIVATE=gitlab.com/*
 RUN go mod download
