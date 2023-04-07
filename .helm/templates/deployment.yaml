@@ -1,0 +1,45 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      imagePullSecrets:                           
+        - name: "registrysecret"
+      containers:
+      - name: {{ .Release.Name }}
+        command: ["/main"]
+        image: {{ index .Values.werf.image .Release.Name }}
+        workingDir: /
+        env:
+            {{- range $name, $value := .Values.envs }}
+            - name: {{ $name }}
+              value: {{ pluck $.Values.global.env $value | first | default $value._default | quote }}
+            {{- end }}
+        ports:
+        - containerPort: {{$.Values.deploy_port}}
+          protocol: TCP
+        resources:
+{{ toYaml $.Values.resources | indent 10 }}          
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: {{$.Values.deploy_port}}
+            scheme: HTTP
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: {{$.Values.deploy_port}}
+            scheme: HTTP

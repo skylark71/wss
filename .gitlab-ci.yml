@@ -1,0 +1,96 @@
+variables:
+  REGISTRY: ${HARBOR_REGISTRY}/${HARBOR_PREFIX}
+
+before_script:
+  - for v in $(env); do
+      if [[ $( echo $v | egrep '^HARBOR_') ]]; then
+        HVARS="${HVARS} --set $v";
+      fi
+    done
+
+stages:
+  - build
+  - deploy
+  - dismiss
+  - cleanup
+
+Build and Publish:
+  stage: build
+  script:
+    - type multiwerf && . $(multiwerf use 1.2 ea --as-file)
+    - type werf && source $(werf ci-env gitlab --as-file)
+    - export DOCKER_CONFIG=$(mktemp -d)
+    - docker login -u ${HARBOR_USER} -p ${HARBOR_PASSWORD} ${REGISTRY}
+    - werf build --repo="${HARBOR_REGISTRY}/${CI_PROJECT_PATH}"
+  except: [schedules]
+  tags: [runner]
+
+.base_deploy: &base_deploy
+  stage: deploy
+  script:
+    - type multiwerf && . $(multiwerf use 1.2 ea --as-file)
+    - type werf && source $(werf ci-env gitlab --as-file)
+    - export DOCKER_CONFIG=$(mktemp -d)
+    - docker login -u ${HARBOR_USER} -p ${HARBOR_PASSWORD} ${REGISTRY}
+    - export WERF_KUBE_CONFIG_BASE64=${KUBE_CONFIG}
+    - werf converge --skip-build --repo="${HARBOR_REGISTRY}/${CI_PROJECT_PATH}" 
+      --set "global.env_url=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3)" 
+      $HVARS
+      --set envs.POSTGRES_DSN_PASSWORD._default=$DB_PASSWORD_STG 
+      --set envs.POSTGRES_DSN_PASSWORD.production=$DB_PASSWORD_PRD 
+  dependencies:
+    - Build and Publish
+  tags: [runner]
+
+Deploy to Staging:
+  <<: *base_deploy
+  variables:
+    KUBE_CONFIG: ${KUBE_CONFIG_STAG}
+    DB_PASSWORD_STG: ${DB_PASSWORD_STG}
+  environment:
+    name: staging
+    url: http://swoop-api-gateway.pacoba.corp.motiv
+  only: [merge_requests]
+
+Deploy to Production:
+  <<: *base_deploy
+  variables:
+    KUBE_CONFIG: ${KUBE_CONFIG_PROD}
+    DB_PASSWORD_PRD: ${DB_PASSWORD_PRD}
+  environment:
+    name: production
+    url: http://swoop-api-gateway.gulsun.corp.motiv
+  only: [master]
+  when: manual
+
+Dismiss:
+  stage: dismiss
+  script:
+    - type multiwerf && . $(multiwerf use 1.2 ea --as-file)
+    - type werf && source $(werf ci-env gitlab --as-file)
+    - export DOCKER_CONFIG=$(mktemp -d)
+    - docker login -u union -p ${HARBOR_PASSWORD} harbor.corp.motiv/union
+    - export WERF_KUBE_CONFIG_BASE64=${KUBE_CONFIG_STAG}
+    - werf dismiss
+  environment:
+    name: staging
+    action: stop
+  variables:
+    GIT_STRATEGY: none
+  # dependencies:
+  #   - Deploy to Staging
+  only: [merge_requests]
+  when: manual
+  tags: [runner]
+
+Cleanup:
+  stage: cleanup
+  script:
+    - type multiwerf && . $(multiwerf use 1.2 ea --as-file)
+    - type werf && source $(werf ci-env gitlab --as-file)
+    - export DOCKER_CONFIG=$(mktemp -d)
+    - docker login -u ${HARBOR_USER} -p ${HARBOR_PASSWORD} ${REGISTRY}
+    - export WERF_KUBE_CONFIG_BASE64=${KUBE_CONFIG_STAG}
+    - werf cleanup --repo="${HARBOR_REGISTRY}/${CI_PROJECT_PATH}"
+  only: [schedules]
+  tags: [runner]

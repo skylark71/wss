@@ -1,0 +1,5 @@
+.helm
+.git*
+.gitlab-ci*
+werf.yaml
+README.md

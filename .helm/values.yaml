@@ -1,0 +1,55 @@
+envs:
+  POSTGRES_DSN_HOST:
+    _default: "192.168.27.173:5432"
+    production: "union-db01.corp.motiv:5432"
+  POSTGRES_DSN_DB:
+    _default: "swoop"
+    production: "swoopprd"
+  POSTGRES_DSN_USER:
+    _default: "postgres"
+    production: "swoopuser"
+  POSTGRES_DSN_PASSWORD:
+    _default: "postgres123"
+    production: ""
+  STATISTIC_SERVICE_HOST:
+    _default: "statistic-service:3002"
+    production: "statistic-service:3002"
+  AUTH_SERVICE_HOST:
+    _default: "auth-service:5000"
+    production: "auth-service:5000"
+  API_WEB_V2_HOST:
+    _default: "api-gateway.api-web-v2-staging:5000"
+    production: "api-gateway.api-web-v2-production:5000"
+  SWOOP_API_HOST:
+    _default: "api-gateway.swoop-staging:80"
+    production: "api-gateway.swoop-production:80"
+  PARTNERS_API_SECRET_KEY:
+    _default: "partners_eI@j@4syX@b5FevNt_CSpHWrmpMhAPdWX20tvQFwi3dhC3@godSqyYrYRsq6hv0XCRKWTiEIcXUXDBA5"
+    production: "partners_eI@j@4syX@b5FevNt_CSpHWrmpMhAPdWX20tvQFwi3dhC3@godSqyYrYRsq6hv0XCRKWTiEIcXUXDBA5"
+  EXTERNAL_SECRET_KEY:
+    _default: "external_xvKcUbUNQq0UvW@PGnPBE463zZcXSr8e4QKOP71WKSFKuFbr4T"
+    production: "external_xvKcUbUNQq0UvW@PGnPBE463zZcXSr8e4QKOP71WKSFKuFbr4T"
+  SWOOP_SECRET_KEY:
+    _default: "partner_FGh345AKGEjifei459VjhfjdKvz3RmG2todGLtPyRHbY2310ifslk0fmmbkfnriwmdoSMwmffmlasm"
+    production: "partner_FGh345AKGEjifei459VjhfjdKvz3RmG2todGLtPyRHbY2310ifslk0fmmbkfnriwmdoSMwmffmlasm"
+  ENV:
+    _default: "staging"
+    production: "production"
+
+domens:
+  _default: ".pacoba.corp.motiv"
+  production: ".gulsun.corp.motiv"
+
+loadBalancerIP:
+  _default: "192.168.117.205"
+  production: "192.168.117.5"
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 50Mi
+  requests:
+    cpu: 100m
+    memory: 50Mi
+
+deploy_port: 3000

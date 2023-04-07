@@ -1,0 +1,8 @@
+project: swoop 
+configVersion: 1
+deploy:
+  helmRelease: single-win-system
+---
+image: single-win-system
+dockerfile: ./Dockerfile
+
