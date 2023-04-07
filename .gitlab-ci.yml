@@ -49,7 +49,6 @@ Deploy to Staging:
     DB_PASSWORD_STG: ${DB_PASSWORD_STG}
   environment:
     name: staging
-    url: http://swoop-api-gateway.pacoba.corp.motiv
   only: [merge_requests]
 
 Deploy to Production:
@@ -59,7 +58,6 @@ Deploy to Production:
     DB_PASSWORD_PRD: ${DB_PASSWORD_PRD}
   environment:
     name: production
-    url: http://swoop-api-gateway.gulsun.corp.motiv
   only: [master]
   when: manual
 
